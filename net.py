@@ -3,45 +3,49 @@ import random
 import math
 from graphics import *
 from critter import critter
+import time
 import gc
-from pympler.tracker import SummaryTracker
-			
+
 gc.enable()
-win = GraphWin("Net", 1000, 1000)
+win = GraphWin("Net", 1000, 1000, autoflush=False)
 critterlist = []
 names = 1
 win.getMouse()
-for i in range(0,10):
+for i in range(0,20):
 	critterlist.append(critter([],names))
 	names += 1
-	
 advance = True
 alltime = 0
-check = 0
 keystring = "d"
+c = Circle(Point(300, 700), 10)
+c.setFill("red")
+c.draw(win)
 while advance:
-	check += 1
 	advance = False
 	for animal in critterlist:
+		if keystring == "d" and animal.best:
+			animal.draw(win)
+			time.sleep(0.001)
+		elif (keystring == "a"):
+			animal.draw(win)
 		if animal.alive:
 			animal.calc()
-			if keystring == "d":
-				animal.draw(win)
-				
-			advance = True	
-	if check == 100:
-		check = 0
+			update(60)
+			advance = True
+	if not advance:
+		advance = True
 		best = 0
 		second = 0
 		deleted = 0
 		temp = critterlist[0]
+		temp2 = critterlist[0]
 		for i in range(len(critterlist)):
 			if critterlist[i].score > best:
 				best = critterlist[i].score
 				temp = critterlist[i]
-#			elif critterlist[i].score > second:
-#				second = critterlist[i].score
-#				temp[1] = critterlist[i]
+			elif critterlist[i].score > second:
+				second = critterlist[i].score
+				temp2 = critterlist[i]
 		if best > alltime:
 			alltime = best
 			print("	Best is: " + str(best))
@@ -50,18 +54,15 @@ while advance:
 				print("	Weights are: " + str(temp.weights))
 				win.getMouse()
 		critterlist = []
-		temp.energy = 100
-		temp.score = 0
-		temp.pos = [500,500]
-		temp.alive = True
-		critterlist.append(temp)
-		critterlist.append(temp.breed(temp,names))
+		critterlist.append(temp.clone(names))
+		critterlist[0].best = True
 		names += 1
-		if len(critterlist) < 10:
-			deleted = 10 - len(critterlist)
-			for i in range(0,deleted):
-				critterlist.append(temp.breed(temp, names))
-				names += 1
+		critterlist.append(temp.breed(temp2,names))
+		names += 1
+		for i in range(0,18):
+			critterlist.append(temp.randclone(names))
+			names += 1
+
 		gc.collect()
 		keystring = win.checkKey()
 		if keystring == "q":
